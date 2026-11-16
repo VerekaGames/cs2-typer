@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl" data-type="software">
 <!--
-  BIAŁO-CZERWONI · typer CS2 · makieta hi-fi v5 (Bento, Geist)
+  BIAŁO-CZERWONI · typer CS2 · makieta hi-fi v6 (CS2: veto, strony CT/T, składy)
 
   SKIPER UI
     Makieta jest jednym plikiem HTML bez dostępu do rejestru shadcn, więc komponenty są napisane ręcznie na Framer Motion.
@@ -11,23 +11,19 @@
       - LoginModal                    -> shadcn Dialog:  npx shadcn@latest add dialog
       - pozostałe                     -> wzorzec:  npx shadcn add @skiper-ui/skiperNN  (numery dobierz w katalogu Skiper UI)
 
-  GEIST
-    Oba kroje (Geist, Geist Mono, wersje zmienne z pakietu npm "geist") są wbudowane w ten plik jako @font-face z data URI,
-    więc nie zależą od Google Fonts ani od sieci. body ma font-family "Geist"; klasa .n oraz wszystkie liczby, wyniki,
-    godziny i etykiety techniczne mają "Geist Mono" z tabular-nums.
-    Next.js:  npm i geist
-              import { GeistSans } from "geist/font/sans"; import { GeistMono } from "geist/font/mono";
-              <html className={`${GeistSans.variable} ${GeistMono.variable}`}>
-              tailwind.config: fontFamily: { sans: ["var(--font-geist-sans)"], mono: ["var(--font-geist-mono)"] }
+  NOWOŚCI W v6
+    - paleta CS2: baza #09090B, złoto #DE9B35 (akcent), cyjan CT #4CC2FF, czerwień T #F0683C; HLTV niebieski, ARRMY żółty
+    - kafelek veto (ban / pick / decider), przed meczem jako prognoza; symulacja gra mapy zgodnie z veto
+    - kafelek formy składu: 5 ról na drużynę z ratingiem (zielony od 1.05, czerwony poniżej 0.97)
+    - oś rund w kolorach stron: cyjan = runda wygrana jako CT, czerwień = jako T
+    - statusy LIVE / UPCOMING / FINISHED z diodami
+    - lista: filtr map (odznaki puli), sortowanie (czas / wyrównane / faworyt), szybki podgląd H2H w klikniętym wierszu,
+      podświetlenie wiersza w kolorach obu drużyn
+    - odznaki map mają własny kolor (fallback do ikon z /api/map)
+    Pula map (POOL) to jedna stała na górze skryptu; docelowo ma przychodzić z API.
 
-  ZMIANY W v5
-    - tło #000, kafelki z jaśniejszą krawędzią i górnym połyskiem, pomarańczowy akcent (CTA, wybrany typ, prowadzące paski)
-    - hero: nagłówek, jedno zdanie, jeden przycisk; bez etykiet i poświaty
-    - forma: W zielone, L czerwone, z literą
-    - logowanie tylko w prawym górnym rogu nawigacji; kafelek konta dla gościa pokazuje progi rang, bez drugiego przycisku
-
-  LOGOWANIE (makieta): DB.user przełącza stan gość / zalogowany. Podmień openLogin() na przekierowanie do Twojego systemu.
-  ZASOBY: logotypy i ikony map ładują się z /api/logo/<slug> i /api/map/<slug>; w makiecie endpoint nie istnieje, widać fallback.
+  GEIST: oba kroje wbudowane jako @font-face z data URI (pakiet npm "geist"). Next.js: npm i geist, GeistSans / GeistMono.
+  LOGOWANIE (makieta): DB.user przełącza gość / zalogowany. ZASOBY: /api/logo/<slug>, /api/map/<slug>, w makiecie widać fallback.
 -->
 <head>
 <meta charset="utf-8">
@@ -42,10 +38,10 @@
 :root{
   /* Layout: bento 12 kolumn. Duży kafelek meczu (8) + dwa wąskie (4) obok, pod nimi trzy kafelki analizy (5/4/3),
      na dole lista (8) i ranking (4). Monochrom; kolor tylko dla live, HLTV i ARRMY. */
-  --bg:#000; --tile:#0b0b0d; --edge:rgba(255,255,255,.12); --edge-2:rgba(255,255,255,.24); --acc:#ff5a1f; --acc-ink:#190800;
+  --bg:#09090b; --tile:#111114; --side-ct:#4cc2ff; --side-t:#f0683c; --edge:rgba(255,255,255,.12); --edge-2:rgba(255,255,255,.24); --acc:#de9b35; --acc-ink:#1a1100;
   --ink:#fff; --mute:#b6b6c0; --dim:#787883; --faint:rgba(255,255,255,.06);
   --live:#ff3b30; --hltv:#2b6ea5; --hltv-ink:#8cc4f0; --arrmy:#eab308; --ok:#22c55e; --bad:#ef4444;
-  --t:#ff5a1f; --ct:#ff5a1f;
+  --t:#de9b35; --ct:#de9b35;
   --sans:"Geist",system-ui,sans-serif; --mono:"Geist Mono",ui-monospace,monospace;
   --out:cubic-bezier(.23,1,.32,1); --r:20px;
   color-scheme:dark;
@@ -72,7 +68,7 @@ a{color:inherit;text-decoration:none}
 .kbd{display:flex;align-items:center;gap:10px;height:34px;padding:0 8px 0 12px;border:1px solid var(--edge);border-radius:10px;color:var(--mute);font-size:13.5px;transition:border-color .15s,color .15s,transform .12s var(--out)}
 .kbd:hover{border-color:var(--edge-2);color:var(--ink)} .kbd:active{transform:scale(.97)}
 .kbd kbd{font:500 11px var(--mono);border:1px solid var(--edge);border-radius:5px;padding:1px 5px;color:var(--dim)}
-.btn{height:34px;padding:0 14px;border-radius:10px;background:var(--acc);color:var(--acc-ink);font-weight:600;box-shadow:0 0 0 1px rgba(255,90,31,.5),0 8px 28px -8px rgba(255,90,31,.7);font-size:13.5px;display:inline-flex;align-items:center;gap:8px;margin-left:8px;transition:transform .12s var(--out),opacity .15s;white-space:nowrap}
+.btn{height:34px;padding:0 14px;border-radius:10px;background:var(--acc);color:var(--acc-ink);font-weight:600;box-shadow:0 0 0 1px rgba(222,155,53,.5),0 8px 28px -8px rgba(222,155,53,.7);font-size:13.5px;display:inline-flex;align-items:center;gap:8px;margin-left:8px;transition:transform .12s var(--out),opacity .15s;white-space:nowrap}
 .btn:hover{opacity:.9} .btn:active{transform:scale(.97)}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--edge);box-shadow:none;font-weight:500} .btn.ghost:hover{border-color:var(--edge-2);opacity:1}
 .who{position:relative;margin-left:8px}
@@ -130,8 +126,8 @@ a{color:inherit;text-decoration:none}
 .pl i{width:13px;height:9px;border-radius:2px;background:linear-gradient(#fff 50%,#dc143c 50%);box-shadow:0 0 0 1px rgba(255,255,255,.1)}
 
 /* featured match */
-.t-match{padding:0;display:flex;flex-direction:column;border-color:rgba(255,90,31,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,90,31,.12),0 0 90px -28px rgba(255,90,31,.6)}
-.t-match:hover{border-color:rgba(255,90,31,.7)}
+.t-match{padding:0;display:flex;flex-direction:column;border-color:rgba(222,155,53,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(222,155,53,.12),0 0 90px -28px rgba(222,155,53,.6)}
+.t-match:hover{border-color:rgba(222,155,53,.7)}
 .t-match .amb{position:absolute;top:-20%;height:75%;width:55%;pointer-events:none;filter:blur(60px)}
 .t-match .amb.a{left:-15%}.t-match .amb.b{right:-15%}
 .t-match .th{position:relative;margin:0;padding:18px 22px;border-bottom:1px solid var(--edge);font-size:13px;color:var(--mute);white-space:nowrap}
@@ -160,9 +156,9 @@ a{color:inherit;text-decoration:none}
 .odd em{font-style:normal;font-size:8px} .odd em.up{color:var(--ok)} .odd em.dn{color:var(--bad)}
 .odd:not(:disabled):hover{border-color:var(--acc);background:rgba(255,255,255,.06)}
 .odd:not(:disabled):active{transform:scale(.98)}
-.odd[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);box-shadow:0 8px 30px -10px rgba(255,90,31,.8)} .odd[aria-pressed="true"] span,.odd[aria-pressed="true"] em{color:var(--acc-ink)}
+.odd[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);box-shadow:0 8px 30px -10px rgba(222,155,53,.8)} .odd[aria-pressed="true"] span,.odd[aria-pressed="true"] em{color:var(--acc-ink)}
 .odd:disabled{border-color:var(--edge);background:transparent;color:var(--mute)}
-.odd:disabled[aria-pressed="true"]{border-color:rgba(255,90,31,.6);color:var(--acc);background:rgba(255,90,31,.08);box-shadow:none} .odd:disabled[aria-pressed="true"] span{color:var(--ink)}
+.odd:disabled[aria-pressed="true"]{border-color:rgba(222,155,53,.6);color:var(--acc);background:rgba(222,155,53,.08);box-shadow:none} .odd:disabled[aria-pressed="true"] span{color:var(--ink)}
 .odd.hit{border-color:rgba(34,197,94,.6)!important;background:rgba(34,197,94,.1)!important;color:var(--ok)!important} .odd.hit span{color:var(--ok)!important}
 .odd.miss b{text-decoration:line-through;color:var(--dim)}
 .ffoot{position:relative;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--edge);font-size:13.5px;color:var(--mute);min-height:60px}
@@ -178,7 +174,7 @@ a{color:inherit;text-decoration:none}
 .pair{display:flex;justify-content:space-between;align-items:end;gap:12px}
 .pair .o{text-align:right;color:var(--mute);font:400 13px var(--mono);font-variant-numeric:tabular-nums;line-height:1.5}
 .pbar{display:flex;height:6px;gap:3px;margin:18px 0 14px}
-.pbar i{display:block;height:100%;border-radius:3px} .pbar i:first-child{background:var(--acc);box-shadow:0 0 14px rgba(255,90,31,.7)} .pbar i:last-child{background:rgba(255,255,255,.16);flex:1}
+.pbar i{display:block;height:100%;border-radius:3px} .pbar i:first-child{background:var(--acc);box-shadow:0 0 14px rgba(222,155,53,.7)} .pbar i:last-child{background:rgba(255,255,255,.16);flex:1}
 .note{margin:0;font-size:12.5px;color:var(--dim);line-height:1.5}
 .spark{margin-top:16px} .spark svg{display:block;width:100%;height:44px}
 
@@ -257,7 +253,7 @@ a{color:inherit;text-decoration:none}
 /* rank + rules */
 .mini{list-style:none;margin:0;padding:0}
 .mini li{display:grid;grid-template-columns:26px 1fr auto;gap:8px;padding:8px 8px;border-radius:8px;font-size:13.5px;align-items:center}
-.mini li.you{background:rgba(255,90,31,.12);box-shadow:inset 0 0 0 1px rgba(255,90,31,.35)}
+.mini li.you{background:rgba(222,155,53,.12);box-shadow:inset 0 0 0 1px rgba(222,155,53,.35)}
 .mini span:first-child{font:400 11.5px var(--mono);color:var(--dim)} .mini b{font:500 13px var(--mono);font-variant-numeric:tabular-nums}
 .lnk{font-size:13.5px;color:var(--mute);transition:color .15s} .lnk:hover{color:var(--ink)}
 .rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;font-size:13.5px;color:var(--mute)}
@@ -275,7 +271,7 @@ tr:last-child td{border-bottom:0}
 th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
 td:nth-child(2){font:500 14px var(--sans)} td:nth-child(3){color:var(--mute);font-family:var(--sans)}
 th:first-child,td:first-child{text-align:left;width:64px;color:var(--dim)}
-td:last-child{font-weight:500;color:var(--ink)} tr.you td{background:rgba(255,90,31,.1)}
+td:last-child{font-weight:500;color:var(--ink)} tr.you td{background:rgba(222,155,53,.1)}
 .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
 .c2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:96px}
 .rule b.k{color:var(--acc);display:block;font:500 40px/1 var(--mono);letter-spacing:-.05em;margin-bottom:22px}
@@ -301,6 +297,47 @@ td:last-child{font-weight:500;color:var(--ink)} tr.you td{background:rgba(255,90
 .toast{position:fixed;left:50%;bottom:26px;z-index:60;background:#fff;color:#000;padding:10px 16px;border-radius:12px;font-weight:500;font-size:13.5px;max-width:calc(100% - 32px);text-align:center}
 footer{border-top:1px solid var(--edge);padding:22px 0 32px;color:var(--dim);font-size:12.5px}
 
+
+/* v6 */
+.st{display:inline-flex;align-items:center;gap:7px;height:22px;padding:0 9px;border-radius:999px;font:500 10.5px/1 "Geist Mono",monospace;letter-spacing:.1em;white-space:nowrap;width:max-content}
+.st i{width:6px;height:6px;border-radius:50%}
+.st.live{color:#ff6b62;background:rgba(255,59,48,.14);box-shadow:inset 0 0 0 1px rgba(255,59,48,.5)} .st.live i{background:var(--live);box-shadow:0 0 10px var(--live);animation:led 1.4s ease-in-out infinite}
+.st.up{color:var(--acc);background:rgba(222,155,53,.12);box-shadow:inset 0 0 0 1px rgba(222,155,53,.45)} .st.up i{background:var(--acc);animation:led 2.8s ease-in-out infinite}
+.st.fin{color:var(--dim);background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--edge)} .st.fin i{background:var(--dim)}
+@keyframes led{50%{opacity:.25}}
+.fb.map{background:hsl(var(--h) 45% 15%);box-shadow:inset 0 0 0 1px hsl(var(--h) 55% 38%)} .fb.map b{color:hsl(var(--h) 85% 78%)}
+.veto{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.veto li{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 6px 12px;border-radius:14px;border:1px solid var(--edge);background:rgba(255,255,255,.02);text-align:center;min-width:0;transition:transform .15s var(--out),border-color .15s}
+.veto li:hover{transform:translateY(-2px);border-color:var(--edge-2)}
+.veto li b{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.veto .who{font-size:11px;color:var(--mute)} .veto .act{font-size:10px;letter-spacing:.1em;font-weight:500}
+.veto .ban{opacity:.62} .veto .ban b{text-decoration:line-through;color:var(--mute)} .veto .ban .act{color:#f87171}
+.veto .pick{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.07)} .veto .pick .act{color:#4ade80}
+.veto .decider{border-color:rgba(222,155,53,.6);background:rgba(222,155,53,.09);box-shadow:0 0 30px -12px rgba(222,155,53,.8)} .veto .decider .act{color:var(--acc)}
+.ros-g{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.ros-h{display:flex;align-items:center;gap:8px;font:500 12px "Geist Mono",monospace;color:var(--mute);margin-bottom:12px}
+.ros-r{display:grid;grid-template-columns:52px 1fr 34px;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);font-size:12.5px;color:var(--mute)}
+.ros-r b{font-size:12.5px;font-weight:500;text-align:right}
+.rb{height:4px;border-radius:2px;background:rgba(255,255,255,.07);display:flex;overflow:hidden} .rb i{display:block;height:100%;border-radius:2px}
+.rd.ct.a i:first-child,.rd.ct.b i:last-child{background:var(--side-ct)} .rd.tt.a i:first-child,.rd.tt.b i:last-child{background:var(--side-t)}
+.rows-l{display:flex;flex-direction:column;gap:2px;font:500 9.5px/10px "Geist Mono",monospace;color:var(--dim);margin-right:6px}
+.rows-l span{height:10px}
+.maps-f{display:flex;gap:6px;flex-wrap:wrap;padding:12px 22px;border-bottom:1px solid var(--edge);align-items:center}
+.mf{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 5px;border-radius:9px;border:1px solid var(--edge);font-size:12.5px;color:var(--mute);transition:border-color .15s,color .15s,background .15s,transform .12s var(--out)}
+.mf:hover{color:var(--ink);border-color:var(--edge-2)} .mf:active{transform:scale(.97)}
+.mf[aria-pressed="true"]{color:var(--ink);border-color:hsl(var(--h) 60% 45%);background:hsl(var(--h) 50% 16%)}
+.mwrap{border-top:1px solid rgba(255,255,255,.05)}
+.mwrap .mrow{border-top:0;cursor:pointer;grid-template-columns:150px minmax(0,1.4fr) minmax(0,1fr) 70px}
+.mrow .when span{white-space:nowrap}
+.mwrap .mrow:hover,.mwrap .mrow.sel{background:linear-gradient(90deg,hsl(var(--ha) 90% 55%/.13),transparent 38%,transparent 62%,hsl(var(--hb) 90% 55%/.13))}
+.mrow .when{gap:7px}
+.quick{display:grid;grid-template-columns:1fr auto 1fr auto;gap:22px;align-items:center;padding:14px 22px 18px;background:rgba(255,255,255,.025);border-top:1px dashed var(--edge)}
+.q{display:flex;flex-direction:column;gap:8px;min-width:0} .q.mid{align-items:center} .q.end{align-items:flex-end}
+.q .h2{font-size:22px;font-weight:500;letter-spacing:-.04em} .qn{font-size:12px;color:var(--mute)} .qn b{color:var(--ink);font-weight:500}
+.form.sm i{width:18px;height:18px;border-radius:5px;font-size:9.5px}
+.lnk.up{color:var(--acc);white-space:nowrap}
+@media (max-width:1040px){.t-veto{grid-column:span 12}.veto{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:720px){.mwrap .mrow{grid-template-columns:104px minmax(0,1fr) 56px}.quick{grid-template-columns:1fr 1fr;gap:14px}.q.mid{grid-column:1/-1;order:-1}.maps-f{padding:12px 16px}.ros-g{gap:14px}}
 @media (max-width:1040px){
   .s8,.s5,.r2{grid-column:span 12;grid-row:auto}.s4,.s3{grid-column:span 6}.col.s4{grid-column:span 12;flex-direction:row}.col.s4>*{flex:1}
   .t-stats{grid-column:span 6}.t-me{grid-column:span 12}
@@ -426,7 +463,7 @@ function reprice(m){const p0=prob(m.base),x=m.maps[m.maps.length-1]||{a:0,b:0};
 function tick(){const now=Date.now();
   for(const m of DB.matches){
     if(m.status==='upcoming'){
-      if(m.start<=now){m.status='live';m.maps=[g(POOL[Math.floor(Math.random()*POOL.length)].name,0,0)];m.hist=[prob(m.odds)];toast('Start: '+m.a.name+' vs '+m.b.name+'. Typy zamknięte.')}
+      if(m.start<=now){m.status='live';m.maps=[g(nextMap(m),0,0)];m.hist=[prob(m.odds)];toast('Start: '+m.a.name+' vs '+m.b.name+'. Typy zamknięte.')}
       else if(Math.random()<.25){m.prev={...m.odds};const d=(Math.random()<.5?-1:1)*.02;m.odds={a:+Math.max(1.05,m.odds.a+d).toFixed(2),b:+Math.max(1.05,m.odds.b-d).toFixed(2)};m.base={...m.odds}}
       continue}
     if(m.status!=='live'||Math.random()>.6)continue;
@@ -434,7 +471,7 @@ function tick(){const now=Date.now();
     if(x[s]>=((x.a>=12&&x.b>=12)?16:13)){x.done=true;m.series[s]++;
       if(m.bo===1||m.series[s]>=need(m)){m.status='finished';const r=scorePick(m,DB.picks[m.id]);
         toast('Koniec: '+m[s].name+' wygrywa'+(r?(r.pts?' · +'+r.pts+' pkt':' · 0 pkt'):''))}
-      else{const left=POOL.filter(p=>!m.maps.some(y=>y.name===p.name));m.maps.push(g(left[Math.floor(Math.random()*left.length)].name,0,0))}}
+      else m.maps.push(g(nextMap(m),0,0))}
     if(m.status==='live')reprice(m)}
   DB.last=now;emit()}
 setInterval(()=>{if(DB.auto&&!document.hidden)tick()},5000);
@@ -452,7 +489,7 @@ function Asset({url,code,hue,size=32,kind='team',label}){
   </span>`;
 }
 const Logo=({t,size})=>html`<${Asset} url=${t.logo} code=${t.tag} hue=${t.hue} size=${size} label=${'Logo '+t.name}/>`;
-const MapIcon=({name,size=26})=>{const p=mapOf(name);return html`<${Asset} url=${p.icon} code=${p.code} size=${size} kind="map" label=${'Mapa '+name}/>`};
+const MapIcon=({name,size=26})=>{const p=mapOf(name);return html`<${Asset} url=${p.icon} code=${p.code} hue=${hash(name)%360} size=${size} kind="map" label=${'Mapa '+name}/>`};
 const Pl=({t})=>t.plNote?html`<span class="pl"><i></i>${t.plNote}</span>`:null;
 const Bar=({w,c})=>html`<${motion.i} initial=${false} animate=${{width:w+'%'}} transition=${{duration:.28,ease:EASE}} style=${{background:c}}/>`;
 function Compare({label,a,b,fmt}){
@@ -468,8 +505,8 @@ function Spark({hist}){
   const pts=hist.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
   return html`<svg viewBox=${'0 0 '+W+' '+Hh} preserveAspectRatio="none" aria-hidden="true">
     <line x1="0" x2=${W} y1=${y(.5)} y2=${y(.5)} stroke="rgba(255,255,255,.14)" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"/>
-    <polygon points=${'0,'+Hh+' '+pts+' '+W+','+Hh} fill="rgba(255,90,31,.14)"/>
-    <polyline points=${pts} fill="none" stroke="#ff5a1f" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    <polygon points=${'0,'+Hh+' '+pts+' '+W+','+Hh} fill="rgba(222,155,53,.14)"/>
+    <polyline points=${pts} fill="none" stroke="#de9b35" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
   </svg>`;
 }
 function CommandPalette({onClose,apply}){
@@ -520,6 +557,69 @@ function Odd({m,s}){
 const MapChips=({m})=>m.maps.length?html`<span class="chips">${m.maps.map(x=>html`<span key=${x.name} class=${'map '+(x.done?'':'now-m')}>${x.name} <b>${x.a}:${x.b}</b></span>`)}</span>`:null;
 const scoreOf=(m,s)=>m.bo===1?m.maps[0][s]:m.series[s];
 
+/* ---- veto, składy, statusy ---- */
+function mkVeto(m){
+  const played=m.maps.map(x=>x.name);let left=POOL.map(p=>p.name);
+  const take=n=>{left=left.filter(x=>x!==n);return n};
+  const best=(t,o)=>left.slice().sort((x,y)=>(t.maps[y]-o.maps[y])-(t.maps[x]-o.maps[x]))[0];
+  const ban=s=>({s,act:'ban',map:take(best(m[s==='a'?'b':'a'],m[s]))}),out=[];
+  if(m.bo===1){const dec=played[0]||null;if(dec)take(dec);
+    for(const s of ['a','b','a','b','a','b'])out.push(ban(s));
+    out.push({s:null,act:'decider',map:dec||take(left[0])});return out}
+  const [pA,pB,dec]=played;[pA,pB,dec].filter(Boolean).forEach(take);
+  out.push(ban('a'),ban('b'));
+  out.push({s:'a',act:'pick',map:pA||take(best(m.a,m.b))},{s:'b',act:'pick',map:pB||take(best(m.b,m.a))});
+  out.push(ban('a'),ban('b'));
+  out.push({s:null,act:'decider',map:dec||take(left[0])});return out;
+}
+const nextMap=m=>mkVeto(m).filter(v=>v.act!=='ban')[m.maps.length].map;
+const ROLES=['IGL','AWP','Entry','Rifler','Support'];
+const roster=t=>ROLES.map(r=>({r,rt:+(t.rt+((hash(t.tag+r)%23)-11)/100).toFixed(2)}));
+const Status=({m})=>m.status==='live'?html`<span class="st live"><i></i>LIVE</span>`:m.status==='upcoming'?html`<span class="st up"><i></i>UPCOMING</span>`:html`<span class="st fin"><i></i>FINISHED</span>`;
+const sideOf=(x,id,i,w)=>{const aCT0=hash(x.name+id)%2===0,half=i<12?0:i<24?1:(Math.floor((i-24)/3)%2);const aCT=half===0?aCT0:!aCT0;return (w==='a')===aCT?'ct':'tt'};
+
+function VetoTile({m}){
+  const v=mkVeto(m),pre=m.status==='upcoming';
+  return html`<section class="tile s8 t-veto" aria-label="Veto map">
+    <div class="th"><span class="label">Veto map · BO${m.bo}</span><span class="r label">${pre?'prognoza z historii map':'przebieg'}</span></div>
+    <ol class="veto">${v.map((x,i)=>html`<li key=${i} class=${x.act} style=${{'--h':hash(x.map)%360}}>
+      <span class="who n">${x.s?m[x.s].tag:'—'}</span>
+      <${MapIcon} name=${x.map} size=${34}/>
+      <b>${x.map}</b>
+      <span class="act n">${x.act==='ban'?'BAN':x.act==='pick'?'PICK':'DECIDER'}</span></li>`)}</ol>
+  </section>`;
+}
+function RosterTile({m}){
+  const col=s=>html`<div class="ros"><div class="ros-h"><${Logo} t=${m[s]} size=${20}/><span>${m[s].tag}</span></div>
+    ${roster(m[s]).map(p=>html`<div key=${p.r} class="ros-r"><span>${p.r}</span><span class="rb"><${Bar} w=${Math.max(8,Math.min(100,(p.rt-.8)/.5*100))} c=${p.rt>=1.05?'var(--ok)':p.rt<.97?'var(--bad)':'rgba(255,255,255,.4)'}/></span>
+      <b class="n" style=${{color:p.rt>=1.05?'#4ade80':p.rt<.97?'#f87171':'var(--ink)'}}>${p.rt.toFixed(2)}</b></div>`)}</div>`;
+  return html`<section class="tile s4" aria-label="Forma składu">
+    <div class="th"><span class="label">Forma składu · rating</span><span class="r label">nicki z API</span></div>
+    <div class="ros-g">${col('a')}${col('b')}</div></section>`;
+}
+function MRow({m,sel,onFocus,onOpen}){
+  const p=P(m.id),w=winnerOf(m),pa=Math.round(prob(m.odds)*100);
+  const tm=s=>html`<span class=${'tm '+(w&&w!==s?'lost':'')}><${Logo} t=${m[s]} size=${22}/><b>${m[s].name}</b>${m[s].plNote&&html`<span class="pl" title=${m[s].plNote}><i></i></span>`}
+    ${m.status!=='upcoming'&&html`<span class="sc">${scoreOf(m,s)}</span>`}</span>`;
+  const od=s=>{const mine=p&&p.winner===s;return html`<span class=${mine?(w?(w===s?'me hit':'me miss'):'me'):''}>${f2(mine&&m.status!=='upcoming'?p.odds:m.odds[s])}</span>`};
+  const form=t=>html`<span class="form sm">${t.form.split('').map((c,i)=>html`<i key=${i} class=${c==='W'?'w':''}>${c}</i>`)}</span>`;
+  const bestMap=t=>{const k=Object.keys(t.maps).sort((x,y)=>t.maps[y]-t.maps[x])[0];return k+' '+t.maps[k]+'%'};
+  return html`<${motion.div} layout="position" initial=${{opacity:0}} animate=${{opacity:1}} exit=${{opacity:0}} transition=${{duration:.18,ease:EASE}} class="mwrap" style=${{'--ha':m.a.hue,'--hb':m.b.hue}}>
+    <div class=${'mrow '+(sel?'sel':'')} role="button" tabIndex="0" aria-expanded=${sel} aria-label=${m.a.name+' vs '+m.b.name} onClick=${onFocus}
+        onKeyDown=${e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onFocus()}}}>
+      <span class="when"><${Status} m=${m}/><span>${m.status==='live'?m.maps[m.maps.length-1].name:m.status==='finished'?clock(m.start):clock(m.start)+' · '+cd(m.start)}</span></span>
+      <span class="tms">${tm('a')}${tm('b')}</span>
+      <span class="ev"><span class="l1"><${Src} s=${m.src}/><span class="n">BO${m.bo}</span></span><span>${m.event} · ${m.stage}</span></span>
+      <span class="od">${od('a')}${od('b')}</span>
+    </div>
+    ${sel&&html`<div class="quick">
+      <div class="q"><span class="label">${m.a.tag} · forma</span>${form(m.a)}<span class="qn">Najlepsza mapa: <b class="n">${bestMap(m.a)}</b></span></div>
+      <div class="q mid"><span class="label">H2H</span><b class="n h2">${m.h2h[0]} : ${m.h2h[1]}</b><span class="qn n">${pa}% / ${100-pa}%</span></div>
+      <div class="q end"><span class="label">${m.b.tag} · forma</span>${form(m.b)}<span class="qn">Najlepsza mapa: <b class="n">${bestMap(m.b)}</b></span></div>
+      <button class="lnk up" onClick=${onOpen}>Pełna analiza ↑</button></div>`}
+  <//>`;
+}
+
 function NowStrip({focus,setFocus}){
   const live=DB.matches.filter(m=>m.status==='live'),next=DB.matches.filter(m=>m.status==='upcoming').sort((a,b)=>a.start-b.start).slice(0,4);
   return html`<div class="tile now s12" aria-label="Teraz i najbliższe mecze">
@@ -546,7 +646,7 @@ function Featured({m,index,total,onStep}){
       <div class="r pager"><span class="label">${String(index+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</span><button aria-label="Poprzedni mecz" onClick=${()=>onStep(-1)}>‹</button><button aria-label="Następny mecz" onClick=${()=>onStep(1)}>›</button></div></div>
     <div class="fgrid">${side('a')}
       <div class="center">
-        ${m.status==='live'?html`<span class="state live label" style=${{color:'var(--live)'}}><i class="dot"></i>Na żywo</span>`:m.status==='finished'?html`<span class="state label">Koniec · ${clock(m.start)}</span>`:html`<span class="state label">Start ${clock(m.start)}</span>`}
+        <${Status} m=${m}/>
         <div class="big">${m.status==='upcoming'?html`<span>vs</span>`:html`${scoreOf(m,'a')}<span>:</span>${scoreOf(m,'b')}`}</div>
         <${MapChips} m=${m}/>
       </div>${side('b')}</div>
@@ -576,8 +676,8 @@ function RoundsTile({m}){
   const x=m.maps[m.maps.length-1];
   return html`<section class="tile s4" aria-label="Rundy">
     <div class="th"><span class="label">Rundy · ${x.name}</span><span class="r n" style=${{fontSize:13}}>${x.a}:${x.b}</span></div>
-    <div class="strip" style=${{marginTop:0}} role="img" aria-label=${'Przebieg rund: '+x.a+' do '+x.b}>${x.log.length?x.log.map((w,i)=>html`<span key=${i} class=${'rd '+w+(i===12||(i>=24&&(i-24)%6===0)?' half':'')} title=${'Runda '+(i+1)}><i></i><i></i></span>`):html`<span class="note">Pierwsza runda w toku.</span>`}</div>
-    <div class="rleg"><span class="label"><i style=${{background:'var(--acc)'}}></i>${m.a.tag}</span><span class="label"><i style=${{background:'#fff'}}></i>${m.b.tag}</span><span class="label">odstęp: zmiana stron</span></div></section>`;
+    <div class="strip" style=${{marginTop:0}} role="img" aria-label=${'Przebieg rund: '+x.a+' do '+x.b}>${x.log.length?x.log.map((w,i)=>html`<span key=${i} class=${'rd '+w+' '+sideOf(x,m.id,i,w)+(i===12||(i>=24&&(i-24)%6===0)?' half':'')} title=${'Runda '+(i+1)}><i></i><i></i></span>`):html`<span class="note">Pierwsza runda w toku.</span>`}</div>
+    <div class="rleg"><span class="label">góra ${m.a.tag} · dół ${m.b.tag}</span><span class="label"><i style=${{background:'var(--side-ct)'}}></i>CT</span><span class="label"><i style=${{background:'var(--side-t)'}}></i>T</span></div></section>`;
 }
 function MapsTile({m}){
   return html`<section class="tile s5" aria-label="Pula map">
@@ -615,25 +715,10 @@ function MeTile(){
     <div class="kv"><div><b>${me.pts}</b><small>punkty</small></div><div><b>${String(rank).padStart(2,'0')}</b><small>miejsce</small></div>
       <div><b>${me.acc}%</b><small>trafność</small></div><div><b>${me.exact}</b><small>dokładne</small></div></div></section>`;
 }
-function MRow({m,sel,onFocus}){
-  const p=P(m.id),w=winnerOf(m),soon=m.status==='upcoming'&&m.start-Date.now()<H;
-  const tm=s=>html`<span class=${'tm '+(w&&w!==s?'lost':'')}><${Logo} t=${m[s]} size=${22}/><b>${m[s].name}</b>${m[s].plNote&&html`<span class="pl" title=${m[s].plNote}><i></i></span>`}
-    ${m.status!=='upcoming'&&html`<span class="sc">${scoreOf(m,s)}</span>`}</span>`;
-  const od=s=>{const mine=p&&p.winner===s;return html`<span class=${mine?(w?(w===s?'me hit':'me miss'):'me'):''}>${f2(mine&&m.status!=='upcoming'?p.odds:m.odds[s])}</span>`};
-  return html`<${motion.button} layout="position" initial=${{opacity:0}} animate=${{opacity:1}} exit=${{opacity:0}} transition=${{duration:.18,ease:EASE}}
-      class=${'mrow '+(sel?'sel':'')} onClick=${onFocus} aria-label=${m.a.name+' vs '+m.b.name+', pokaż w kafelkach'}>
-    ${m.status==='live'?html`<span class="when live"><b><i class="dot"></i>LIVE</b><span>${m.maps[m.maps.length-1].name}</span></span>`
-      :m.status==='finished'?html`<span class="when"><b style=${{color:'var(--mute)'}}>Koniec</b><span>${clock(m.start)}</span></span>`
-      :html`<span class=${'when '+(soon?'soon':'')}><b>${clock(m.start)}</b><span>za ${cd(m.start)}</span></span>`}
-    <span class="tms">${tm('a')}${tm('b')}</span>
-    <span class="ev"><span class="l1"><${Src} s=${m.src}/><span class="n">BO${m.bo}</span></span><span>${m.event} · ${m.stage}</span></span>
-    <span class="od">${od('a')}${od('b')}</span>
-  <//>`;
-}
-function ListTile({f,setF,focusId,onFocus,openCmd}){
+function ListTile({f,setF,focusId,onFocus,onOpen,openCmd}){
   const all=DB.matches,cnt=s=>s==='all'?all.length:all.filter(m=>m.status===s).length;
   const list=all.filter(m=>f[m.src]&&(f.status==='all'||m.status===f.status)&&(!f.team||m.a.name===f.team||m.b.name===f.team)&&(!f.event||m.event===f.event)
-    &&(!f.map||m.maps.some(x=>x.name===f.map))&&(!f.unpicked||(m.status==='upcoming'&&!P(m.id))));
+    &&(!f.map||mkVeto(m).some(v=>v.act!=='ban'&&v.map===f.map))&&(!f.unpicked||(m.status==='upcoming'&&!P(m.id))));
   const groups=[['Na żywo',m=>m.status==='live'],['Dziś',m=>m.status==='upcoming'&&dayKey(m.start)<=0],['Jutro',m=>m.status==='upcoming'&&dayKey(m.start)===1],
     ['Później',m=>m.status==='upcoming'&&dayKey(m.start)>1],['Zakończone',m=>m.status==='finished']];
   const tabs=[['all','Wszystkie'],['live','Na żywo'],['upcoming','Nadchodzące'],['finished','Zakończone']],ago=Math.round((Date.now()-DB.last)/1e3);
@@ -647,10 +732,15 @@ function ListTile({f,setF,focusId,onFocus,openCmd}){
       <button class="fsrc hltv" aria-pressed=${f.hltv} onClick=${()=>setF({...f,hltv:!f.hltv})}>HLTV</button>
       <button class="fsrc arrmy" aria-pressed=${f.arrmy} onClick=${()=>setF({...f,arrmy:!f.arrmy})}>ARRMY</button>
     </div>
-    ${(f.team||f.event||f.map||f.unpicked)&&html`<div class="active">${chip('team','Drużyna')}${chip('event','Turniej')}${chip('map','Mapa')}${chip('unpicked','Bez mojego typu')}</div>`}
-    ${list.length?groups.map(([label,fn])=>{const gl=list.filter(fn).sort((a,b)=>label==='Zakończone'?b.start-a.start:a.start-b.start);if(!gl.length)return null;
+    <div class="maps-f" role="group" aria-label="Filtr map"><span class="label" style=${{marginRight:6}}>Mapa</span>${POOL.map(p=>html`<button key=${p.name} class="mf" style=${{'--h':hash(p.name)%360}} aria-pressed=${f.map===p.name}
+      onClick=${()=>setF({...f,map:f.map===p.name?null:p.name})}><${MapIcon} name=${p.name} size=${22}/>${p.name}</button>`)}
+      <div class="tabs" role="group" aria-label="Sortowanie" style=${{marginLeft:'auto'}}>${[['time','Czas'],['close','Wyrównane'],['fav','Faworyt']].map(([k,l])=>html`<button key=${k} aria-pressed=${f.sort===k} onClick=${()=>setF({...f,sort:k})}>
+        ${f.sort===k&&html`<${motion.span} layoutId="sort-pill" class="pill" transition=${{duration:.22,ease:EASE}}/>`}<span>${l}</span></button>`)}</div>
+    </div>
+    ${(f.team||f.event||f.unpicked)&&html`<div class="active">${chip('team','Drużyna')}${chip('event','Turniej')}${chip('unpicked','Bez mojego typu')}</div>`}
+    ${list.length?groups.map(([label,fn])=>{const cl=m=>Math.abs(prob(m.odds)-.5);const gl=list.filter(fn).sort((a,b)=>f.sort==='close'?cl(a)-cl(b):f.sort==='fav'?cl(b)-cl(a):label==='Zakończone'?b.start-a.start:a.start-b.start);if(!gl.length)return null;
       return html`<div key=${label}><div class="grp label">${label} · ${String(gl.length).padStart(2,'0')}</div>
-        <${AnimatePresence} initial=${false} mode="popLayout">${gl.map(m=>html`<${MRow} key=${m.id} m=${m} sel=${m.id===focusId} onFocus=${()=>onFocus(m.id)}/>`)}<//></div>`})
+        <${AnimatePresence} initial=${false} mode="popLayout">${gl.map(m=>html`<${MRow} key=${m.id} m=${m} sel=${m.id===focusId} onFocus=${()=>onFocus(m.id)} onOpen=${onOpen}/>`)}<//></div>`})
       :html`<div class="empty"><b>Żaden mecz nie pasuje do filtrów</b>Usuń filtr albo włącz oba źródła.</div>`}
   </section>`;
 }
@@ -678,10 +768,12 @@ function Matches({f,setF,focus,setFocus,openCmd}){
     <${Featured} key=${fm.id} m=${fm} index=${fi} total=${order.length} onStep=${step}/>
     <${ProbTile} m=${fm}/>
     <${RoundsTile} m=${fm}/>
-    <${MapsTile} m=${fm}/>
+    <${VetoTile} m=${fm}/>
     <${StatsTile} m=${fm}/>
+    <${MapsTile} m=${fm}/>
+    <${RosterTile} m=${fm}/>
     <${MeTile}/>
-    <${ListTile} f=${f} setF=${setF} focusId=${fm.id} openCmd=${openCmd} onFocus=${id=>{setFocus(id);top.current&&top.current.scrollIntoView({behavior:'smooth',block:'start'})}}/>
+    <${ListTile} f=${f} setF=${setF} focusId=${fm.id} openCmd=${openCmd} onFocus=${id=>setFocus(id)} onOpen=${()=>top.current&&top.current.scrollIntoView({behavior:'smooth',block:'start'})}/>
     <div class="col s4"><${RankTile}/><${RulesTile}/></div>
   </div>`;
 }
@@ -722,7 +814,7 @@ const routeOf=()=>{const h=location.hash.slice(1);return ['mecze','ranking','zas
 function App(){
   useStore();
   const [view,setView]=useState(routeOf),[cmd,setCmd]=useState(false),[focus,setFocus]=useState('m1'),[menu,setMenu]=useState(false);
-  const [f,setF]=useState({status:'all',hltv:true,arrmy:true,team:null,event:null,map:null,unpicked:false});
+  const [f,setF]=useState({status:'all',hltv:true,arrmy:true,team:null,event:null,map:null,unpicked:false,sort:'time'});
   useEffect(()=>{const on=()=>{setView(routeOf());window.scrollTo(0,0)};window.addEventListener('hashchange',on);
     const k=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setCmd(c=>!c)}else if(e.key==='Escape'){setCmd(false);setMenu(false);if(DB.login){DB.login=false;emit()}}};
     window.addEventListener('keydown',k);return()=>{window.removeEventListener('hashchange',on);window.removeEventListener('keydown',k)}},[]);
